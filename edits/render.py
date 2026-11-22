@@ -791,7 +791,7 @@ def reader(ss=None, n=None):
     if ss is not None: cmd += ['-ss', str(ss)]
     cmd += ['-i', SRC]
     if n: cmd += ['-frames:v', str(n)]
-    cmd += ['-vf', f'scale={W}:{H}:flags=lanczos', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-']
+    cmd += ['-vf', 'hqdn3d=1.5:1.5:3:3,scale=1080:1920:flags=lanczos,colorbalance=rs=-0.03:gs=0.03:bs=-0.03:rm=-0.03:gm=0.05:bm=-0.04:rh=-0.02:gh=0.02:bh=-0.02,eq=saturation=0.9:contrast=1.05:gamma=1.03,unsharp=5:5:0.8:3:3:0.3', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-']
     return subprocess.Popen(cmd, stdout=subprocess.PIPE)
 
 if STILLS:
@@ -803,8 +803,8 @@ if STILLS:
 
 rd = reader()
 wr = subprocess.Popen(['ffmpeg', '-v', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}', '-r', '30000/1001', '-i', '-',
-                       '-i', os.environ.get('AUD', SRC), '-map', '0:v', '-map', '1:a', '-c:v', 'libx264', '-preset', 'medium', '-crf', '19', '-pix_fmt', 'yuv420p',
-                       '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', '-shortest', OUT], stdin=subprocess.PIPE)
+                       '-i', os.environ.get('AUD', SRC), '-map', '0:v', '-map', '1:a', '-c:v', 'libx264', '-preset', 'slow', '-crf', '16', '-profile:v', 'high', '-level', '4.2', '-pix_fmt', 'yuv420p', '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709',
+                       '-c:a', 'aac', '-b:a', '256k', '-ar', '48000', '-movflags', '+faststart', '-shortest', OUT], stdin=subprocess.PIPE)
 i = 0
 while True:
     b = rd.stdout.read(W * H * 3)
