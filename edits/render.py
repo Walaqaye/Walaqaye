@@ -425,8 +425,7 @@ def snap_at(t):
             u = eout((t - a[0]) / max(b[0] - a[0], 1e-6))
             return lerp(a[1], b[1], u), lerp(a[2], b[2], u), lerp(a[3], b[3], u)
     return 1, .5, .5
-POPS = [(27.5, 28.2, 'TAYO SARE', (255, 255, 255)),
-        (31.9, 33.0, 'ILKAHAAGA', (255, 255, 255)), (33.0, 34.9, 'ILAALI!', (255, 214, 0))]
+POPS = []
 def pop_img(txt, col):
     f = fit(FB, txt, 940, 124)
     tw, th, bb = tsize(f, txt)
@@ -545,6 +544,35 @@ def fx_ui(t, base):
             d.polygon(pts, fill=(255, 255, 255, int(255 * (1 - ex))), outline=(0, 0, 0, int(255 * (1 - ex))))
     return base, ov
 
+REF_ROWS = [('yellow', 'Kaarka Jaalaha', 38.6), ('red', 'Kaarka Cas', 39.4), ('ok', 'Waa diyaar', 41.6)]
+REF_IN, REF_OUT = 37.4, 46.9
+def fx_ref(t, base):
+    if not (REF_IN <= t < REF_OUT + .5): return base, None
+    pw = 500
+    ph = int(150 + sum(72 * eout(prog(t, ti, .35)) for _, _, ti in REF_ROWS) + (12 if t >= REF_ROWS[0][2] else 0))
+    card = rrect(pw, ph, 32, (14, 14, 18, 222)); d = ImageDraw.Draw(card)
+    d.rounded_rectangle([28, 28, 34, 112], 3, fill=(255, 90, 54))
+    d.text((52, 50), 'Kaararka Garsooraha', font=F(FB, 38), fill='white', anchor='lm')
+    d.text((52, 94), 'Referee cards  •  Cas & Jaale', font=F(FMD, 25), fill=(160, 160, 172), anchor='lm')
+    if ph > 150: d.line([28, 136, pw - 28, 136], fill=(80, 80, 90), width=2)
+    for i, (kind, txt, ti) in enumerate(REF_ROWS):
+        y = 182 + i * 72
+        p = eout(prog(t, ti, .35))
+        if p <= 0: continue
+        a = int(255 * p); xo = (1 - p) * 40
+        if kind == 'ok':
+            d.ellipse([32 + xo, y - 20, 72 + xo, y + 20], fill=(34, 197, 94, a)); check(d, 34 + xo, y - 18, 36, (255, 255, 255, a), 5)
+        else:
+            col = (255, 210, 0) if kind == 'yellow' else (225, 30, 40)
+            d.rounded_rectangle([38 + xo, y - 26, 66 + xo, y + 26], 5, fill=col + (a,))
+        d.text((92 + xo, y), txt, font=F(FXB, 32), fill=(255, 255, 255), anchor='lm')
+    card = with_shadow(card, 18, (0, 12), 120)
+    pin = eout(prog(t, REF_IN, .45)); pout = ein(prog(t, REF_OUT, .4))
+    ov = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    x = 44 + pw / 2 - (1 - pin) * 620 - pout * 620
+    place(ov, card, x, H - 110 - ph / 2, 1, 0, 1)
+    return base, ov
+
 # ---------------------------------------------------------------- 5. CHECKLIST
 ITEMS = [('Cabbir yar', 55.9), ('Cabbir weyn', 56.8), ('Noocyo kala duwan', 65.8), ('Wax walba ku qaado', 69.7)]
 CK_IN, CK_OUT = 51.7, 70.9
@@ -576,20 +604,24 @@ def fx_check(t, base):
             cxb, cyb = 50 + bs / 2 + xo, y + 4 + bs / 2
             d.rounded_rectangle([cxb - s / 2, cyb - s / 2, cxb + s / 2, cyb + s / 2], 18, fill=(34, 197, 94))
             check(d, cxb - bs / 2 + 4, cyb - bs / 2 + 4, bs - 8, 'white', 9, clamp((p - .2) / .6))
-        d.text((150 + xo, y + 40), txt, font=F(FXB, 52), fill=(16, 16, 20, int(255 * rp)) if p <= 0 else (16, 16, 20), anchor='lm')
+        d.text((150 + xo, y + 40), txt, font=F(FXB, 52), fill=(16, 16, 20), anchor='lm')
     card = with_shadow(card, 26, (0, 18), 130)
     pin = eout(prog(t, CK_IN, .5)); pout = ein(prog(t, CK_OUT, .4))
     bounce = 1 + 0.035 * sum(math.sin(clamp((t - ti) / .3) * math.pi) for _, ti in ITEMS if 0 <= t - ti < .3)
     ov = Image.new('RGBA', (W, H), (0, 0, 0, 0))
-    place(ov, card, W / 2, H - 70 - ch / 2 + (1 - pin) * 900 + pout * 900, bounce, -1.2 * (1 - pin), 1)
+    SC = 0.6
+    card = card.resize((int(card.width * SC), int(card.height * SC)), Image.LANCZOS)
+    ccx = 44 + cw * SC / 2 - (1 - pin) * 720 - pout * 720
+    ccy = H - 110 - ch * SC / 2
+    place(ov, card, ccx, ccy, bounce, 0, 1)
     # confetti on completion
     u = t - ITEMS[-1][1]
-    if 0 <= u < 1.2:
+    if False:
         d2 = ImageDraw.Draw(ov); rng = np.random.default_rng(7)
         cols = [(255, 90, 54), (34, 197, 94), (20, 132, 255), (255, 214, 0)]
         for k in range(60):
             a_ = rng.uniform(-math.pi, 0); v = rng.uniform(500, 1300)
-            x = W / 2 + math.cos(a_) * v * u; y = H * .62 + math.sin(a_) * v * u + 900 * u * u
+            x = ccx + math.cos(a_) * v * u * .6; y = ccy - 120 + math.sin(a_) * v * u * .6 + 900 * u * u
             c = cols[k % 4]
             d2.rectangle([x, y, x + 16, y + 10], fill=c + (int(255 * (1 - u / 1.2)),))
     return base, ov
@@ -742,7 +774,7 @@ def fx_profile(t, base):
     place(ov, img, 34 + img.width / 2 - 20, 40 + img.height / 2 - 20 - (1 - p) * 200 - hide * 200, press, 0, a)
     return base, ov
 
-EFFECTS = [fx_chat, fx_snap, fx_ui, fx_check, fx_phone, fx_profile]
+EFFECTS = [fx_chat, fx_snap, fx_ref, fx_check, fx_phone, fx_profile]
 
 def render(t, frame):
     fr = frame
@@ -771,7 +803,7 @@ if STILLS:
 
 rd = reader()
 wr = subprocess.Popen(['ffmpeg', '-v', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{W}x{H}', '-r', '30000/1001', '-i', '-',
-                       '-i', SRC, '-map', '0:v', '-map', '1:a', '-c:v', 'libx264', '-preset', 'medium', '-crf', '19', '-pix_fmt', 'yuv420p',
+                       '-i', os.environ.get('AUD', SRC), '-map', '0:v', '-map', '1:a', '-c:v', 'libx264', '-preset', 'medium', '-crf', '19', '-pix_fmt', 'yuv420p',
                        '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', '-shortest', OUT], stdin=subprocess.PIPE)
 i = 0
 while True:
