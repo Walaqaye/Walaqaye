@@ -218,8 +218,8 @@ def typing_img(phase):
 def chat_header():
     im = Image.new('RGBA', (W, 170), (18, 18, 22, 235)); d = ImageDraw.Draw(im)
     d.ellipse([40, 45, 120, 125], fill=(20, 132, 255))
-    d.text((80, 85), 'D', font=F(FB, 44), fill='white', anchor='mm')
-    d.text((145, 62), 'Dukaanka Isboortiga', font=F(FXB, 40), fill='white', anchor='lm')
+    d.text((80, 85), 'H', font=F(FB, 44), fill='white', anchor='mm')
+    d.text((145, 62), 'Hurre New Sports', font=F(FXB, 40), fill='white', anchor='lm')
     d.ellipse([146, 100, 164, 118], fill=(46, 204, 113))
     d.text((174, 109), 'online  •  fariimaha macaamiisha', font=F(FMD, 28), fill=(170, 170, 180), anchor='lm')
     return im
@@ -309,12 +309,12 @@ def fx_zoom(t, base):
     d = ImageDraw.Draw(ov)
     wc = (255, 255, 255, int(235 * a))
     m, L = 50, 90
-    for (x, y, sx, sy) in [(m, m + 60, 1, 1), (W - m, m + 60, -1, 1), (m, H - m - 60, 1, -1), (W - m, H - m - 60, -1, -1)]:
+    for (x, y, sx, sy) in [(m, m + 150, 1, 1), (W - m, m + 150, -1, 1), (m, H - m - 60, 1, -1), (W - m, H - m - 60, -1, -1)]:
         d.line([x, y, x + sx * L, y], fill=wc, width=7); d.line([x, y, x, y + sy * L], fill=wc, width=7)
-    if int(t * 2) % 2 == 0: d.ellipse([90, 150, 124, 184], fill=(255, 40, 40, int(255 * a)))
-    d.text((138, 167), 'REC', font=F(FMONO, 38), fill=wc, anchor='lm')
+    if int(t * 2) % 2 == 0: d.ellipse([90, 240, 124, 274], fill=(255, 40, 40, int(255 * a)))
+    d.text((138, 257), 'REC', font=F(FMONO, 38), fill=wc, anchor='lm')
     fn = int((t % 1) * 30)
-    d.text((W - 90, 167), f'00:00:{int(t):02d}:{fn:02d}', font=F(FMONO, 36), fill=wc, anchor='rm')
+    d.text((W - 90, 257), f'00:00:{int(t):02d}:{fn:02d}', font=F(FMONO, 36), fill=wc, anchor='rm')
     d.text((90, H - 185), f'ZOOM {z:.1f}x', font=F(FMONO, 44), fill=(255, 214, 0, int(255 * a)), anchor='lm')
     d.rectangle([90, H - 140, 90 + 360, H - 128], outline=wc, width=2)
     d.rectangle([90, H - 140, 90 + 360 * (z - 1) / 1.2, H - 128], fill=(255, 214, 0, int(255 * a)))
@@ -328,8 +328,8 @@ def fx_zoom(t, base):
         if 0 <= u < 1.2:
             dots = '▮' * (1 + min(int(u / .2), 4)) + '▯' * (4 - min(int(u / .2), 4))
             lbl = 'ENHANCING ' + ('.' * (int(u * 8) % 4))
-            d.rounded_rectangle([W / 2 - 250, 300, W / 2 + 250, 380], 14, fill=(0, 0, 0, 170))
-            d.text((W / 2, 340), lbl, font=F(FMONO, 40), fill=(255, 214, 0), anchor='mm')
+            d.rounded_rectangle([W / 2 - 250, 330, W / 2 + 250, 410], 14, fill=(0, 0, 0, 170))
+            d.text((W / 2, 370), lbl, font=F(FMONO, 40), fill=(255, 214, 0), anchor='mm')
     # target box during zoom 1
     if 23.7 <= t < 25.6:
         p = eback(prog(t, 23.7, .3)); s = lerp(420, 240, p); bx, by = W * .58, H * .53
@@ -398,10 +398,10 @@ def ui_content(kind, w, h, t):
     return im
 
 UI = [  # kind, t_in, box(x0,y0,w,h), phase
-    ('search', 36.6, (70, 70, 940, 110), 0.0),
+    ('search', 36.6, (70, 200, 940, 110), 0.0),
     ('product', 37.5, (36, 560, 520, 220), 0.3),
-    ('yellow', 38.6, (620, 520, 420, 110), 0.6),
-    ('red', 39.4, (660, 660, 380, 110), 0.9),
+    ('yellow', 38.6, (620, 560, 420, 110), 0.6),
+    ('red', 39.4, (660, 700, 380, 110), 0.9),
     ('rating', 41.5, (36, 1060, 520, 190), 0.2),
     ('stock', 42.8, (660, 1120, 380, 110), 0.5),
 ]
@@ -508,7 +508,7 @@ def reels_ui(t):
     im.alpha_composite(g, (0, SH - 260))
     d.text((28, 70), 'Reels', font=F(FB, 34), fill='white', anchor='lm')
     d.ellipse([28, SH - 170, 76, SH - 122], fill=(255, 90, 54))
-    d.text((90, SH - 146), 'dukaanka.isboortiga', font=F(FXB, 24), fill='white', anchor='lm')
+    d.text((90, SH - 146), 'hurre.newsports', font=F(FXB, 24), fill='white', anchor='lm')
     d.text((28, SH - 96), 'Boorsooyinka jiimka  •  Hadda ka hel', font=F(FMD, 24), fill='white', anchor='lm')
     likes = 1200 + int(clamp((t - 71.5) / 4) * 3400)
     ix = SW - 50
@@ -531,7 +531,7 @@ def reels_ui(t):
         d.polygon([(cx - s, cy - s * .3), (cx + s, cy - s * .3), (cx, cy + s)], fill=(255, 255, 255, a))
     return im
 
-OUTRO = [(80.8, 'NA SOO BOOQO!', 'yellow', .70, -3), (82.0, 'WAX WALBA WAA DIYAAR', 'red', .80, 2.5)]
+OUTRO = []
 OUTRO_IMG = [headline_img(x[1], x[2]) for x in OUTRO]
 BAGTAG = lower_tag('BOORSADA JIIMKA', '> NIKE  //  CABBIR WEYN', (255, 90, 54))
 
@@ -600,7 +600,46 @@ def fx_phone(t, base):
         place(ov, OUTRO_IMG[i], W / 2, y * H, lerp(1.6, 1, eback(p, 1.4)), ang, clamp(p * 4))
     return fr, ov
 
-EFFECTS = [fx_headlines, fx_chat, fx_zoom, fx_ui, fx_check, fx_phone]
+
+# ---------------------------------------------------------------- TIKTOK PROFILE (top)
+def profile_img(following):
+    name = 'Hurre New Sports'
+    f1 = F(FB, 40)
+    nw = tsize(f1, name)[0]
+    bw = 210
+    w, h = 150 + nw + 30 + bw + 22, 116
+    im = Image.new('RGBA', (w, h), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+    d.rounded_rectangle([0, 0, w - 1, h - 1], 58, fill=(12, 12, 16, 200))
+    # avatar with cyan/pink ring
+    d.ellipse([12, 12, 104, 104], fill=(37, 244, 238)); d.ellipse([16, 12, 108, 104], fill=(254, 44, 85))
+    d.ellipse([18, 16, 102, 100], fill=(12, 12, 16)); d.ellipse([22, 20, 98, 96], fill=(255, 255, 255))
+    d.text((60, 58), 'H', font=F(FB, 46), fill=(12, 12, 16), anchor='mm')
+    d.text((126, 44), name, font=f1, fill='white', anchor='lm')
+    vx = 126 + nw + 24
+    d.ellipse([vx - 15, 29, vx + 15, 59], fill=(32, 213, 236)); check(d, vx - 13, 31, 26, 'white', 4)
+    d.text((128, 84), 'TikTok', font=F(FSB, 26), fill=(190, 190, 200), anchor='lm')
+    bx = w - bw - 22
+    if following:
+        d.rounded_rectangle([bx, 28, bx + bw, 88], 14, fill=(60, 60, 70))
+        d.text((bx + bw / 2, 58), 'Following', font=F(FXB, 30), fill='white', anchor='mm')
+    else:
+        d.rounded_rectangle([bx, 28, bx + bw, 88], 14, fill=(254, 44, 85))
+        d.text((bx + bw / 2, 58), 'Follow', font=F(FXB, 32), fill='white', anchor='mm')
+    return with_shadow(im, 14, (0, 8), 110)
+PROF = [profile_img(False), profile_img(True)]
+FOLLOW_T = 3.4
+def fx_profile(t, base):
+    p = eout(prog(t, 0.3, .5))
+    hide = eio(prog(t, 7.0, .3)) * (1 - eio(prog(t, 15.3, .4)))  # chat header owns the top 7-15s
+    a = p * (1 - hide)
+    if a <= 0: return base, None
+    ov = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    img = PROF[1 if t >= FOLLOW_T else 0]
+    press = 1 - 0.05 * math.sin(clamp((t - FOLLOW_T + .1) / .25) * math.pi)
+    place(ov, img, 34 + img.width / 2 - 20, 40 + img.height / 2 - 20 - (1 - p) * 200 - hide * 200, press, 0, a)
+    return base, ov
+
+EFFECTS = [fx_chat, fx_zoom, fx_ui, fx_check, fx_phone, fx_profile]
 
 def render(t, frame):
     fr = frame
