@@ -33,3 +33,7 @@ Limits:
 - **Green Screen** keys your clip for real, if it was shot on green.
 - **Orbit, Frame Escape, Paper Cutout and Magazine Cover** rely on a cut-out subject layer. Person segmentation isn't included, so with your own clip these effects fall back to the full frame.
 - There's no video export. To capture an effect, screen-record the full-size view.
+
+## Ready-made videos
+
+`videos/` has all 18 effects as MP4 files: 1080×1920 (9:16), 30 fps, one seamless loop each. Import them into any free editor, such as CapCut, InShot or VN.
