@@ -350,6 +350,109 @@ def fx_zoom(t, base):
     if a < 1: ov.putalpha(ov.split()[3].point(lambda v: int(v * max(a, 0))))
     return fr, ov
 
+# ---------------------------------------------------------------- 2b. COMPACT CHAT CARD
+def bubble2(text, who):
+    f = F(FSB, 34)
+    lines = wrap(text, f, 540)
+    lh = 44
+    tw = max(tsize(f, l)[0] for l in lines)
+    w, h = tw + 52, lh * len(lines) + 30
+    bg = (52, 52, 62, 255) if who == 'c' else (20, 132, 255, 255)
+    im = rrect(w, h, 26, bg); d = ImageDraw.Draw(im)
+    for i, l in enumerate(lines):
+        d.text((26, 15 + i * lh + lh / 2), l, font=f, fill='white', anchor='lm')
+    return im
+BUB2 = [bubble2(m[2], m[1]) for m in MSGS]
+def typing2(t):
+    im = rrect(110, 60, 30, (20, 132, 255, 255)); d = ImageDraw.Draw(im)
+    for i in range(3):
+        a = 0.5 + 0.5 * math.sin(t * 9 - i * 1.1)
+        d.ellipse([28 + i * 27 - 7, 30 - 7 - a * 4, 28 + i * 27 + 7, 30 + 7 - a * 4], fill=(255, 255, 255, int(150 + 105 * a)))
+    return im
+CW_, VMAX, GAP2, HDR2 = 900, 470, 12, 96
+def fx_chat(t, base):
+    if not (7.2 <= t < 15.5): return base, None
+    pin = eout(prog(t, 7.2, .45)); pout = ein(prog(t, 14.85, .45))
+    vis = [i for i, m in enumerate(MSGS) if t >= m[0] - (0.5 if m[1] == 's' else 0)]
+    slots = {}
+    for i in vis:
+        st = MSGS[i][0] - (0.5 if MSGS[i][1] == 's' else 0)
+        slots[i] = (BUB2[i].height + GAP2) * eout(prog(t, st, .25))
+    ctot = max(1, int(sum(slots.values())))
+    content = Image.new('RGBA', (CW_ - 48, ctot), (0, 0, 0, 0))
+    yb = ctot
+    for i in reversed(vis):
+        m = MSGS[i]; img = BUB2[i]
+        if m[1] == 's' and t < m[0]:
+            img = typing2(t)
+        p = prog(t, MSGS[i][0] - (0.5 if m[1] == 's' and t < m[0] else 0), .25)
+        x = img.width / 2 if m[1] == 'c' else CW_ - 48 - img.width / 2
+        place(content, img, x, yb - GAP2 - img.height / 2, lerp(.6, 1, eback(p)), 0, clamp(p * 3))
+        yb -= slots[i]
+    V = min(ctot, VMAX)
+    view = content.crop((0, ctot - V, CW_ - 48, ctot))
+    # fade the top edge of the scroll area
+    if ctot > VMAX:
+        fm = Image.new('L', (1, 60)); [fm.putpixel((0, y), int(255 * y / 60)) for y in range(60)]
+        a = view.split()[3]; top = a.crop((0, 0, view.width, 60))
+        from PIL import ImageChops
+        a.paste(ImageChops.multiply(top, fm.resize((view.width, 60))), (0, 0)); view.putalpha(a)
+    chh = HDR2 + V + 28
+    card = rrect(CW_, chh, 36, (14, 14, 18, 215)); d = ImageDraw.Draw(card)
+    d.ellipse([26, 20, 82, 76], fill='white'); d.text((54, 48), 'H', font=F(FB, 32), fill=(14, 14, 18), anchor='mm')
+    d.text((100, 36), 'Hurre New Sports', font=F(FXB, 32), fill='white', anchor='lm')
+    d.ellipse([101, 61, 115, 75], fill=(46, 204, 113))
+    d.text((124, 68), 'online', font=F(FMD, 24), fill=(170, 170, 180), anchor='lm')
+    d.line([24, HDR2 - 4, CW_ - 24, HDR2 - 4], fill=(255, 255, 255, 40), width=2)
+    card.alpha_composite(view, (24, HDR2 + 10))
+    card = with_shadow(card, 20, (0, 12), 120)
+    ov = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    place(ov, card, W / 2, H - 90 - chh / 2 + (1 - pin) * 160 + pout * 200, 1, 0, pin * (1 - pout))
+    return base, ov
+
+# ---------------------------------------------------------------- 3b. SNAP ZOOM
+SNAPS = [(23.8, 25.3, 1.6, .57, .40), (27.5, 28.2, 1.25, .5, .45), (28.2, 29.4, 1.45, .5, .47),
+         (31.9, 33.0, 1.3, .55, .35), (33.0, 34.9, 1.55, .56, .34)]
+SK = [(0, 1, .5, .5)]
+for j, (t0, t1, z, cx, cy) in enumerate(SNAPS):
+    SK.append((t0, SK[-1][1], SK[-1][2], SK[-1][3]))
+    SK.append((t0 + .12, z, cx, cy)); SK.append((t1, z, cx, cy))
+    if j + 1 >= len(SNAPS) or abs(SNAPS[j + 1][0] - t1) > 1e-3: SK.append((t1 + .15, 1, cx, cy))
+SK.append((999, 1, .5, .5))
+def snap_at(t):
+    for a, b in zip(SK, SK[1:]):
+        if a[0] <= t < b[0]:
+            u = eout((t - a[0]) / max(b[0] - a[0], 1e-6))
+            return lerp(a[1], b[1], u), lerp(a[2], b[2], u), lerp(a[3], b[3], u)
+    return 1, .5, .5
+POPS = [(27.5, 28.2, 'TAYO SARE', (255, 255, 255)),
+        (31.9, 33.0, 'ILKAHAAGA', (255, 255, 255)), (33.0, 34.9, 'ILAALI!', (255, 214, 0))]
+def pop_img(txt, col):
+    f = fit(FB, txt, 940, 124)
+    tw, th, bb = tsize(f, txt)
+    im = Image.new('RGBA', (tw + 60, th + 60), (0, 0, 0, 0))
+    ImageDraw.Draw(im).text((30 - bb[0], 30 - bb[1]), txt, font=f, fill=col, stroke_width=9, stroke_fill=(10, 10, 12))
+    return with_shadow(im, 12, (0, 8), 120)
+POP_IMG = [pop_img(p[2], p[3]) for p in POPS]
+def fx_snap(t, base):
+    if not (23.5 <= t < 35.3): return base, None
+    z, cx, cy = snap_at(t)
+    dx, dy = shake(t, [s_[0] for s_ in SNAPS], 16, .3)
+    fr = cam(base, z, cx, cy, dx, dy)
+    z2, cx2, cy2 = snap_at(t - .05)
+    if abs(z2 - z) > .03:  # motion blur trail
+        z3, cx3, cy3 = snap_at(t - .025)
+        fr = Image.blend(Image.blend(cam(base, z2, cx2, cy2, dx, dy), cam(base, z3, cx3, cy3, dx, dy), .5), fr, .55)
+    ov = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    for s_ in SNAPS:
+        u = t - s_[0]
+        if 0 <= u < .12: ov.alpha_composite(Image.new('RGBA', (W, H), (255, 255, 255, int(110 * (1 - u / .12)))))
+    for i, (t0, t1, txt, col) in enumerate(POPS):
+        if t0 <= t < t1:
+            p = prog(t, t0, .18); o = 1 - prog(t, t1 - .1, .1)
+            place(ov, POP_IMG[i], W / 2, H * .70, lerp(1.6, 1, eback(p, 2.2)), 3 if i % 2 else -3, clamp(p * 4) * o)
+    return fr, ov
+
 # ---------------------------------------------------------------- 4. UI WORLD
 def glass(base, box, r=36):
     x0, y0, x1, y1 = [int(v) for v in box]
@@ -630,7 +733,7 @@ PROF = [profile_img(False), profile_img(True)]
 FOLLOW_T = 3.4
 def fx_profile(t, base):
     p = eout(prog(t, 0.3, .5))
-    hide = eio(prog(t, 7.0, .3)) * (1 - eio(prog(t, 15.3, .4)))  # chat header owns the top 7-15s
+    hide = 0
     a = p * (1 - hide)
     if a <= 0: return base, None
     ov = Image.new('RGBA', (W, H), (0, 0, 0, 0))
@@ -639,7 +742,7 @@ def fx_profile(t, base):
     place(ov, img, 34 + img.width / 2 - 20, 40 + img.height / 2 - 20 - (1 - p) * 200 - hide * 200, press, 0, a)
     return base, ov
 
-EFFECTS = [fx_chat, fx_zoom, fx_ui, fx_check, fx_phone, fx_profile]
+EFFECTS = [fx_chat, fx_snap, fx_ui, fx_check, fx_phone, fx_profile]
 
 def render(t, frame):
     fr = frame
